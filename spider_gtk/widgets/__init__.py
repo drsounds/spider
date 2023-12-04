@@ -1,3 +1,5 @@
+import traceback
+
 import gi 
 
 gi.require_version('Gtk', '4.0')
@@ -22,6 +24,7 @@ class SpiderWidget(Gtk.Stack):
         self.render()
 
     def render(self, component=None):
+        print(f"Rendering component {component}")
         sp = self.spider
         if component:
             self.spider.add_listener(
@@ -31,6 +34,7 @@ class SpiderWidget(Gtk.Stack):
             self.component = component
         elif self.component:
             component = self.component
+        print(component)
         self.spider_gtk.render(
             sp.create_element(
                 component,
@@ -48,6 +52,7 @@ class GtkSpiderNativeWidget:
     props = None
     children = None
     renderer = None
+    listeners = {}
 
     def set_widget_attr(self, key, value):
         tag = self.tag
@@ -68,18 +73,20 @@ class GtkSpiderNativeWidget:
     def set_attribute(self, prop_key, value):
         if prop_key.startswith('on'):
             event_name = prop_key[3:].lower()
-            callback = self.props[prop_key]  
+            callback = self.props[prop_key]
             if callable(callback):
+                action = f'{event_name}ed'
                 def on_click_callback(*args):
                     print("Executing callback")
                     callback(*args)
                 try:
                     print(f"Disconnecting {event_name}ed")
-                    self.widget.disconnect(f'{event_name}ed')
-                except:
+                    self.widget.disconnect(self.listeners[action])
+                except Exception as e:
+                    traceback.print_exception(e)
                     pass
                 try:
-                    self.widget.connect(f'{event_name}ed', on_click_callback) 
+                    self.listeners[action] = self.widget.connect(action, on_click_callback) 
                 except:
                     pass
 
@@ -122,7 +129,9 @@ class GtkButtonSpiderWidget(GtkSpiderNativeWidget):
             self.widget.set_label(children)
       
     def set_attribute(self, key, value):
-        if key == 'text':
+        if key == 'children':
+            if isinstance(value, tuple):
+                value = list(value)[0]
             self.widget.set_label(value)
         else:
             super().set_attribute(key, value)

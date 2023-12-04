@@ -37,15 +37,12 @@ class SpiderExampleApplication(Gtk.Application):
 
 
 def hello_world(**props):
-    [clicks, set_clicks] = use_state(0)
-    [clicks_2, set_clicks_2] = use_state(2)
-    print(f"Clicks {clicks}")
+    [get_clicks, set_clicks] = use_state(0)
+
     def handle_click(event):
-        set_clicks(clicks + 1)
-        print("Handle click")
-        
-    def handle_click_2(event):
-        set_clicks_2(clicks_2 + 1)
+        print("props.key = " + props.get('key'))
+        print(f"clicks: {get_clicks()}")
+        set_clicks(get_clicks() + 1)
         print("Handle click")
 
     return create_element(
@@ -59,14 +56,13 @@ def hello_world(**props):
                 on_click=handle_click,
                 key="button_1",
             ),
-            f"Clicks {clicks}"
+            f"Clicks {get_clicks()}"
         ),
         create_element(
-            'button',
+            'label',
             dict(
-                on_click=handle_click_2,
-                key="button_2",
+                key="label_2"
             ),
-            f"Clicks 2 {clicks_2}"
+            f"You clicked {get_clicks()}"
         )
     )

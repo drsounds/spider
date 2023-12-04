@@ -150,7 +150,6 @@ class Spider(Observable):
         old_value = elm.state.get(state_id, None)
         elm.state[state_id] = new_value
         print(f"old_value != new_value => {old_value} != {new_value}")
-        elm.state[state_id] = new_value
         if old_value != new_value:
             print("Triggering re-render")
             self.rerender()
@@ -159,7 +158,7 @@ class Spider(Observable):
         self,
         tag
     ):
-        print(tag)
+        #print(tag)
         if callable(tag):
             return tag
         return create_node_func(tag)
@@ -173,6 +172,7 @@ class Spider(Observable):
         Spider.instance = self
         type = self.resolve_element_type(tag)
         key = props.get('key')
+        print("key: " + str(key) + " tag: " + str(tag) + "")
         elm = self.rendering_elements.get(key)
         if elm:
             print("Found existing element")
@@ -182,7 +182,7 @@ class Spider(Observable):
                 state={}
             )
             self.rendering_elements[key] = elm
-            elm.use_state_number = 0
+        elm.use_state_number = 0
         self.current_rendering_element = elm
 
         rendered_element = type(
@@ -207,20 +207,23 @@ class Spider(Observable):
         key = elm.key
         use_state_number = elm.use_state_number
         use_state_key = f"use_state_{use_state_number}"
-        print(f"Use state key {use_state_key}")
+        #print(f"Use state key {use_state_key}")
         value = elm.state.get(use_state_key, initial_state)
-        print(f"Value {value}")
+        #print(f"Value {value}")
         if value is None:
             value = initial_state
+
+        def get_value():
+            return elm.state.get(use_state_key, initial_state)
 
         def set_value(
             new_value
         ):  
-            print(f"Set value of key = {key}")
+            #print(f"Set value of key = {key}")
             self.set_state(key, use_state_key, new_value)
 
         elm.use_state_number += 1
-        return [value, set_value]
+        return [get_value, set_value]
 
     def create_context(
         self,
