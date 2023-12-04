@@ -95,9 +95,9 @@ class GtkSpiderNativeWidget:
                 self.widget.set_label(self.props[prop_key]) 
             for child in list(self.props[prop_key]):
                 if isinstance(child, str):
-                    self.widget.set_label(child) 
+                        self.widget.set_label(child) 
         else:
-            self.set_widget_attr(prop_key, self.props[prop_key])
+            self.set_widget_attr(prop_key, self.props[prop_key])    
 
     def __init__(self, renderer=None, tag=None, props=None, children=None, *args, **kwargs):
         self.renderer = renderer
