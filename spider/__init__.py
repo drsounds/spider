@@ -133,6 +133,8 @@ class Spider(Observable):
     rendered_elements = {}
     renderer : SpiderRenderer = None
 
+    rendering_stack = []
+
     contexts = {}
 
     current_key = None
@@ -174,6 +176,7 @@ class Spider(Observable):
         type = self.resolve_element_type(tag)
         key = props.get('key')
         elm = self.rendering_elements.get(key)
+
         if elm:
             print("Found existing element")
         else:
@@ -189,6 +192,7 @@ class Spider(Observable):
             **props,
             children=children
         )
+
         self.current_rendering_element.rendered_element = rendered_element
         self.current_rendering_element.use_state_number = 0
         self.rendered_elements[key] = rendered_element
@@ -202,7 +206,7 @@ class Spider(Observable):
         self,
         initial_state=None
     ): 
-        elm = self.rendering_elements[self.current_rendering_element.key]
+        elm = self.current_rendering_element.key
 
         key = elm.key
         use_state_number = elm.use_state_number

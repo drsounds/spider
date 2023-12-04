@@ -43,14 +43,11 @@ class SpiderWidget(Gtk.Stack):
 
 
 class GtkSpiderNativeWidget:
-    tag = None
+    element = None
     widget = None
-    props = None
-    children = None
-    renderer = None
 
     def set_widget_attr(self, key, value):
-        tag = self.tag
+        tag = self.element.tag
         widget = self.widget
         if tag is Gtk.Widget:
             if key == 'on_click':
@@ -92,21 +89,17 @@ class GtkSpiderNativeWidget:
         else:
             self.set_widget_attr(prop_key, self.props[prop_key])
 
-    def __init__(self, renderer=None, tag=None, props=None, children=None, *args, **kwargs):
-        self.renderer = renderer
-        self.props = props
-        self.children = children
-        self.widget = Gtk.Label()
-        self.tag = tag
+    def __init__(self, element=None, *args, **kwargs):
+        self.element = element
 
 
 class GtkBoxSpiderWidget(GtkSpiderNativeWidget):
-    def __init__(self, renderer=None, tag=None, props=None, children=None):
-        super().__init__(renderer=renderer, tag=tag, props=props, children=children)
+    def __init__(self, element=None, *props, **kwargs):
+        super().__init__(element=element, *props, **kwargs)
         self.widget = Gtk.Box()
-        if tag == 'vbox':
+        if element.type == 'vbox':
             self.widget.set_orientation(Gtk.Orientation.VERTICAL)
-        if tag == 'hbox':
+        if element.type == 'hbox':
             self.widget.set_orientation(Gtk.Orientation.HORIZONTAL)
         self.widget.set_spacing(10)
 
@@ -115,11 +108,9 @@ class GtkBoxSpiderWidget(GtkSpiderNativeWidget):
 class GtkButtonSpiderWidget(GtkSpiderNativeWidget):
     widget = None
 
-    def __init__(self, renderer=None, tag=None, props=None, children=None):
-        super().__init__(renderer=renderer, tag=tag, props=props, children=children)
-        self.widget = Gtk.Button()
-        if isinstance(children, str):
-            self.widget.set_label(children)
+    def __init__(self, element=None, *props, **kwargs):
+        super().__init__(element=element, *props, **kwargs)
+        self.widget = Gtk.Button() 
       
     def set_attribute(self, key, value):
         if key == 'text':
@@ -131,11 +122,11 @@ class GtkButtonSpiderWidget(GtkSpiderNativeWidget):
 class GtkTreeViewSpiderNativeWidget(GtkSpiderNativeWidget):
     widget = None
 
-    def __init__(self, renderer=None, tag=None, props=None, children=None):
-        super().__init__(renderer=renderer, tag=tag, props=props, children=children)
+    def __init__(self, element=None, *props, **kwargs):
+        super().__init__(element=element, *props, **kwargs)
         self.widget = Gtk.Label()
-        self.widget.set_text(children)
-    
+        self.widget.set_text(element.children)
+
     def set_attribute(self, key, value):
         super().set_attribute(key, value)
         if key == 'text':
@@ -147,7 +138,7 @@ class GtkTreeViewSpiderNativeWidget(GtkSpiderNativeWidget):
 class GtkTreeViewSpiderWidget(GtkSpiderNativeWidget):
     widget = None
 
-    def __init__(self, renderer=None, tag=None, props=None, children=None):
-        super().__init__(renderer=renderer, tag=tag, props=props, children=children)
-        widget = Gtk.TreeView()
+    def __init__(self, element=None, *props, **kwargs):
+        super().__init__(element=element, *props, **kwargs)
+        self.widget = Gtk.TreeView()
         self.widget.set_model(Gtk.ListStore(str))

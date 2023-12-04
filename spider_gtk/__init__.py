@@ -17,39 +17,28 @@ class SpiderGTK(SpiderRenderer):
         super().__init__(*args, **kwargs)
         self.spider = spider
 
-    def create_widget(self, tag, props, children) -> Spider:
+    def create_widget(self, element) -> Spider:
         from spider_gtk.widgets import GtkBoxSpiderWidget, GtkButtonSpiderWidget, GtkSpiderNativeWidget, GtkTreeViewSpiderWidget
 
         widget_class = GtkSpiderNativeWidget
-        if tag == 'button':
+        if element.tag == 'button':
             widget_class = GtkButtonSpiderWidget
-        elif tag in ['vbox', 'hbox', 'box']:
+        elif element.tag in ['vbox', 'hbox', 'box']:
             widget_class = GtkBoxSpiderWidget
-            
-        elif tag == 'treeview':
+
+        elif element.tag == 'treeview':
             widget_class = GtkTreeViewSpiderWidget
         return widget_class(
             renderer=self,
-            tag=tag,
-            props=props,
-            children=children
+            element=element
         )
 
     def upsert_widget(self, element):
-        if isinstance(element, str):
-            element = SpiderNode(
-                type=Gtk.Label,
-                props=dict(
-                    key=element,
-                    label=element
-                )
-            )
-        tag = element.type
         props = element.props
         key = props.get('key')
         created = False
         if not key in self.widgets:
-            widget = self.create_widget(tag, props, [])
+            widget = self.create_widget(element)
             self.widgets[key] = widget
             created = True
         widget = self.widgets[key]
