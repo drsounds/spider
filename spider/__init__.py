@@ -42,6 +42,7 @@ class SpiderElementInstance:
         key=None,
         state={}
     ):
+        self.key = key
         self.state = state
 
 
@@ -144,11 +145,14 @@ class Spider(Observable):
         super().__init__(*args, **kwargs)
         self.renderer = renderer
 
-    def set_state(self, state_id, new_value):
-        old_value = self.current_rendering_element.state.get(state_id, None)
+    def set_state(self, key, state_id, new_value):
+        elm = self.rendering_elements[key]
+        old_value = elm.state.get(state_id, None)
+        elm.state[state_id] = new_value
         print(f"old_value != new_value => {old_value} != {new_value}")
+        elm.state[state_id] = new_value
         if old_value != new_value:
-            self.current_rendering_element.state[state_id] = new_value
+            print("Triggering re-render")
             self.rerender()
 
     def resolve_element_type(
@@ -170,14 +174,16 @@ class Spider(Observable):
         type = self.resolve_element_type(tag)
         key = props.get('key')
         elm = self.rendering_elements.get(key)
-        if not elm:
+        if elm:
+            print("Found existing element")
+        else:
             elm = SpiderElementInstance(
                 key=key,
                 state={}
             )
             self.rendering_elements[key] = elm
             elm.use_state_number = 0
-            self.current_rendering_element = elm
+        self.current_rendering_element = elm
 
         rendered_element = type(
             **props,
@@ -196,19 +202,22 @@ class Spider(Observable):
         self,
         initial_state=None
     ): 
-        elm = self.current_rendering_element
+        elm = self.rendering_elements[self.current_rendering_element.key]
 
+        key = elm.key
         use_state_number = elm.use_state_number
         use_state_key = f"use_state_{use_state_number}"
         print(f"Use state key {use_state_key}")
         value = elm.state.get(use_state_key, initial_state)
+        print(f"Value {value}")
         if value is None:
             value = initial_state
 
         def set_value(
             new_value
         ):  
-            self.set_state(use_state_key, new_value)
+            print(f"Set value of key = {key}")
+            self.set_state(key, use_state_key, new_value)
 
         elm.use_state_number += 1
         return [value, set_value]

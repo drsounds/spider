@@ -17,33 +17,23 @@ class SpiderGTK(SpiderRenderer):
         super().__init__(*args, **kwargs)
         self.spider = spider
 
-    def set_widget_attr(self, tag, widget, key, value):
-        if tag is Gtk.Widget:
-            if key == 'on_click':
-                widget.connect('clicked', value)
-            if key == 'text':
-                widget.set_label(value)
-            if key == 'name':
-                widget.set_name(value)
-        elif tag is str:
-            setattr(widget, key, value)
-        if key == 'children':
-            for child in value:
-                self.render(child, widget)
+    def create_widget(self, tag, props, children) -> Spider:
+        from spider_gtk.widgets import GtkBoxSpiderWidget, GtkButtonSpiderWidget, GtkSpiderNativeWidget, GtkTreeViewSpiderWidget
 
-    def create_widget(self, tag):
-        widget = Gtk.Label()
+        widget_class = GtkSpiderNativeWidget
         if tag == 'button':
-            widget = Gtk.Button()
+            widget_class = GtkButtonSpiderWidget
         elif tag in ['vbox', 'hbox', 'box']:
-            widget = Gtk.Box()
-            if tag == 'vbox':
-                widget.set_orientation(Gtk.Orientation.VERTICAL)
-            if tag == 'hbox':
-                widget.set_orientation(Gtk.Orientation.HORIZONTAL)
-        else:
-            widget = Gtk.Label()
-        return widget
+            widget_class = GtkBoxSpiderWidget
+            
+        elif tag == 'treeview':
+            widget_class = GtkTreeViewSpiderWidget
+        return widget_class(
+            renderer=self,
+            tag=tag,
+            props=props,
+            children=children
+        )
 
     def upsert_widget(self, element):
         if isinstance(element, str):
@@ -59,36 +49,13 @@ class SpiderGTK(SpiderRenderer):
         key = props.get('key')
         created = False
         if not key in self.widgets:
-            widget = self.create_widget(tag)
+            widget = self.create_widget(tag, props, [])
             self.widgets[key] = widget
             created = True
         widget = self.widgets[key]
         for prop_key in props:
-            if prop_key.startswith('on'):
-                event_name = prop_key[3:].lower()
-                callback = props[prop_key]  
-                if callable(callback):
-                    def on_click_callback(*args):
-                        print("Executing callback")
-                        callback(*args)
-                    try:
-                        print(f"Disconnecting {event_name}ed")
-                        widget.disconnect(f'{event_name}ed')
-                    except:
-                        pass
-                    try:
-                        widget.connect(f'{event_name}ed', on_click_callback) 
-                    except:
-                        pass
-
-            if prop_key == 'children':
-                if isinstance(props[prop_key], str):
-                    widget.set_label(props[prop_key]) 
-                for child in list(props[prop_key]):
-                    if isinstance(child, str):
-                        widget.set_label(child) 
-            else:
-                self.set_widget_attr(tag, widget, prop_key, props[prop_key])
+            print(f"Setting attribute {prop_key}")
+            widget.set_attribute(prop_key, props[prop_key])
         return widget, created
 
     def render(self, node: SpiderNode, container : Gtk.Widget = None) -> Gtk.Widget:
@@ -103,12 +70,12 @@ class SpiderGTK(SpiderRenderer):
         print("Rendered widget")
         if created:
             if hasattr(container, 'add_child'):
-                container.add_child(widget)
+                container.add_child(widget.widget)
             if hasattr(container, 'append'):
-                container.append(widget)
+                container.append(widget.widget)
         if isinstance(node, SpiderNode):
             print("Rendering children")
             for child in node.props.get('children', []):
                 print("Rendering child")
-                child_widget, child_created = self.render(child, widget)
+                child_widget, child_created = self.render(child, widget.widget)
         return widget, created

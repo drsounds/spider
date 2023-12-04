@@ -6,4 +6,3 @@ pypika-tortoise==0.1.6
 pytz==2023.3.post1
 tortoise-orm==0.20.0
 typing_extensions==4.8.0
-
